@@ -1,3 +1,4 @@
+import hashlib
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_user, login_required, logout_user
 from sqlalchemy import text
@@ -14,6 +15,7 @@ def login():
 def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
+    password=hashlib.sha3_256(password.encode('utf-8')).hexdigest() # Change password in memory to hashed version
     remember = True if request.form.get('remember') else False
 
     user = User.query.filter_by(email=email).first()
@@ -45,8 +47,8 @@ def signup_post():
         app.logger.debug("User email already exists")
         return redirect(url_for('auth.signup'))
 
-    # create a new user with the form data. TODO: Hash the password so the plaintext version isn't saved.
-    new_user = User(email=email, name=name, password=password)
+    # create a new user with the form data. Storing non-salted hash. TODO: Change to salted hash
+    new_user = User(email=email, name=name, password=hashlib.sha3_256(password.encode('utf-8')).hexdigest())
 
     # add the new user to the database
     db.session.add(new_user)
